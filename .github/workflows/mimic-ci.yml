@@ -35,13 +35,13 @@ jobs:
           fi
 
       - name: Check patch file exists
-        run: test -s patches/mimic-baseline.patch
+        run: test -s patches/boringssl-baseline.patch
 
       - name: Dry-run apply patch to upstream
         shell: bash
         run: |
           set -euo pipefail
-          git -C upstream/boringssl apply --check ../../patches/mimic-baseline.patch
+          git -C upstream/boringssl apply --check ../../patches/boringssl-baseline.patch
 
   build-linux:
     name: Build Patched Upstream (Linux)
@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git -C upstream/boringssl apply ../../patches/mimic-baseline.patch
+          git -C upstream/boringssl apply ../../patches/boringssl-baseline.patch
 
       - name: Configure
         run: cmake -S upstream/boringssl -B build -GNinja -DCMAKE_BUILD_TYPE=Release

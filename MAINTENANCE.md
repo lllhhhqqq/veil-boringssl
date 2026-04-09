@@ -10,7 +10,7 @@ This repository is the maintained fork for `veil-boringssl`.
 
 1. Upstream source of truth is `upstream/boringssl` submodule.
 2. Upstream pin must match `upstream-baseline.txt` (`673e61fc215b178a90c0e67858bbf162c8158993`).
-3. Fork delta must be carried as explicit patch files under `patches/`.
+3. Fork delta must be carried as explicit patch files under `patches/` (current baseline: `patches/boringssl-baseline.patch`).
 4. `mimic-v*` tags are releasable rollback anchors.
 5. No silent semantic drift against documented baseline.
 
