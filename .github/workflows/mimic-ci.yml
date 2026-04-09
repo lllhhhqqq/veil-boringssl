@@ -1,0 +1,71 @@
+name: Mimic CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["mimic-v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-layout:
+    name: Verify Upstream Pin + Patch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check upstream submodule pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(tr -d '\r\n' < upstream-baseline.txt)"
+          actual="$(git rev-parse HEAD:upstream/boringssl)"
+          if [ "$expected" != "$actual" ]; then
+            echo "upstream baseline mismatch"
+            echo "expected: $expected"
+            echo "actual:   $actual"
+            exit 1
+          fi
+
+      - name: Check patch file exists
+        run: test -s patches/mimic-baseline.patch
+
+      - name: Dry-run apply patch to upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C upstream/boringssl apply --check ../../patches/mimic-baseline.patch
+
+  build-linux:
+    name: Build Patched Upstream (Linux)
+    runs-on: ubuntu-latest
+    needs: verify-layout
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Apply patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C upstream/boringssl apply ../../patches/mimic-baseline.patch
+
+      - name: Configure
+        run: cmake -S upstream/boringssl -B build -GNinja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build crypto+ssl
+        run: cmake --build build --target crypto ssl
